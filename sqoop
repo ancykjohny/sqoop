@@ -1,0 +1,151 @@
+//SHOW DATABASES
+sqoop list-databases --connect jdbc:mysql://localhost --username root --password 'root';
+college
+mysql
+performance_schema
+retail
+sys
+utility
+utilitys
+--------------------------------------------------------------------------------------------------
+SHOW TABLES
+sqoop list-tables --connect jdbc:mysql://localhost/college --username root --password 'root';
+fy
+h1b
+h1b1
+h1b2
+h1b_app
+h1b_application
+h1b_applications
+h1bap
+student_master
+topten
+--------------------------------------------------------------------------------------------
+//SQL TO HDFS
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table student_master --target-dir /hanoi/student_master;
+1,Sanjay,Bangalore
+3,Rajesh,Chennai
+------------------------------------------------------------------------------------------------------------
+//WITH INCREMENTAL
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table student_master --check-column student_id --incremental append --last-value  6 --target-dir /nit1/student_master;
+
+8,New3,New Place3
+--------------------------------------------------------------------------------------------------
+COMPRESS FILE
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table student_master --target-dir /nit1/student_master4 --compress -m 1;
+//ZIPFILE
+1,Sanjay,Bangalore
+2,Rajiv,Delhi
+3,Rajesh,Chennai
+4,Sandeep,Delhi
+5,New,New Place
+6,New2,New Place2
+7,New2,New Place2
+8,New3,New Place3
+--------------------------------------------------------------------------------
+//SQL TO HDFS
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table topten --target-dir /nit1/topten1 -m 1 ;
+009485,Stuart,House,58,Teacher,1943.85
+4006425,Joe,Burns,30,Economist,1732.09
+---------------------------------------------------------------------------------------------------
+//TABLE TO AVRO TYPE
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table topten --target-dir /nit1/top10avro --as-avrodatafile -m 1 ;
+
+sqoop import --connect jdbc:mysql://localhost/college --username root --password '' --table topten --target-dir /nit1/top10seq --as-sequencefile -m 1 
+
+SEQ!org.apache.hadoop.io.LongWritabletopten\00\00\00\00\00\00\9D\91Y\E2\E2a14Um"\E19\A4\C7\00\00\003\00\00\00\00\00\00\00\00\00\00\00\00\00=.
+\00Stuart\00House\00\00\00\00:\00Teacher\00@\9E_fffff\00\00\002\00\00\00\00\00\00\00\00\00\00\00\00="\00Joe\00Burns\00\00\00\00\00	Economist\00@\9B\(\F5
+--------------------------------------------------------------------------------------------------------------------------------------
+\\IMPORT TABLE TO AVRO
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table topten --target-dir /nit1/top10seqs --as-sequencefile -m 1 ;
+
+SEQ!org.apache.hadoop.io.LongWritabletopten\00\00\00\00\00\00\8B@m\FAt,\99\96\87\81]$\B2\F1\00\00\003\00\00\00\00\00\00\00\00\00\00\00\00\00=.
+\00Stuart\00House\00\00\00\00:\00Teacher\00@\9E_fffff\00\00\002\00\00\00\00\00\00\00\00\00\00\00\00="\00Joe\00Burns\00\00\00\00\00	Economist\00@\9B\(\F5
+----------------------------------------------------------------------------------------------------------------------
+//WHERE CLAUSE
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table student_master --where 'student_id=1 or student_id=3' --target-dir /nit1/query -m 1;
+1,Sanjay,Bangalore
+3,Rajesh,Chennai
+-----------------------------------------------------------------------------------------------------------------------
+//WITH QUERY
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --query ‘select * from student_master’ --target-dir /nit1/query8 -m 1;
+
+1,Sanjay
+2,Rajiv
+3,Rajesh
+4,Sandeep
+5,New
+6,New2
+7,New2
+8,New3
+-----------------------------------------------------------------------------------------------------------------
+//WITH INNER JOINS in form of Query
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --query 'select a.student_id, a.name, a.address, b.result from student_master a, fy b where $CONDITIONS and a.student_id=b.student_id' --target-dir /nit1/query2 -m 1;
+1,Sanjay,Bangalore,81.9
+2,Rajiv,Delhi,78.9
+--------------------------------------------------------------------------------------------------------------------------------
+//WITH LEFT OUTER JOINS in form of Query
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --query 'select a.student_id, a.name, a.address, b.result from  
+student_master a left outer join fy b on a.student_id = b.student_id where $CONDITIONS' --target-dir /nit1/query3 -m 1;
+1,Sanjay,Bangalore,81.9
+2,Rajiv,Delhi,78.9
+3,Rajesh,Chennai,null
+4,Sandeep,Delhi,null
+5,New,New Place,null
+6,New2,New Place2,null
+7,New2,New Place2,null
+8,New3,New Place3,null
+-----------------------------------------------------------------------------------
+//WITH RIGHT OUTER JOINS in form of Query
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --query 'select a.student_id, a.name, a.address, b.result from  
+student_master a right outer join fy b on a.student_id = b.student_id where $CONDITIONS' --target-dir /nit1/query4 -m 1;
+1,Sanjay,Bangalore,81.9
+2,Rajiv,Delhi,78.9
+-------------------------------------------------------------------------------------
+//WITH COLUMN CLAUSE
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --table student_master --columns "student_id,name"  --target-dir /nit1/query5 -m 1;
+1,Sanjay
+2,Rajiv
+3,Rajesh
+4,Sandeep
+5,New
+6,New2
+7,New2
+8,New3
+--------------------------------------------------------------------------------------------
+//IMPORT ALL TABLES FROM SQL TO HDFS
+sqoop import-all-tables --connect jdbc:mysql://localhost/college --username root --password 'root' --warehouse-dir /nit1/all_tables  ;
+2,2,78.9--FY
+7,New2,New Place2--STUDENTMASTER
+8,New3,New Place3--STUDENT MASTER
+----------------------------------------------------------------------------------------------------
+//Import data into hive managed tables
+a.sqoop import --connect jdbc:mysql://localhost/college --username  root --password 'root' --table fy --hive-import --hive-table college.fyresults -m 1;
+select * from college.fyresults;
+OK
+1	1	81.9
+2	2	78.9
+1	1	81.9
+2	2	78.9
+Time taken: 1.01 seconds, Fetched: 4 row(s)
+
+sqoop import --connect jdbc:mysql://localhost/college --username root --password 'root' --query 'select a.student_id, a.name, a.address, b.result from student_master a, fy b where $CONDITIONS and a.student_id=b.student_id' --hive-import --hive-table college.studentjoin --target-dir /nit1/query26 -m 1;
+1SanjayBangalore81.9
+2RajivDelhi78.9
+
+c.sqoop import --connect jdbc:mysql://localhost/college --username  root --password 'root' --table student_master --columns "student_id,name" --hive-import --hive-table college.student1 -m 1;
+
+ select * from college.student1;
+OK
+1	Sanjay
+2	Rajiv
+3	Rajesh
+4	Sandeep
+5	New
+6	New2
+7	New2
+8	New3
+Time taken: 0.263 seconds, Fetched: 8 row(s)
+
+----------------------------------------------------------------------------------------------------------------
+
